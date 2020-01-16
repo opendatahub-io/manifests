@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  template:
+    spec:
+      volumes:
+      - $patch: delete
+        name: metadata-mysql
+      - name: metadata-mysql
+        emptyDir: {}
+        

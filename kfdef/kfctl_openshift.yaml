@@ -91,6 +91,7 @@ spec:
       overlays:
       - istio
       - openshift
+  #    - crc # If you're running on Code Ready Containers (CRC), you will need this overlay to work around issue https://github.com/code-ready/crc/issues/814
       repoRef:
         name: manifests
         path: metadata
@@ -243,5 +244,5 @@ spec:
     name: seldon-core-operator
   repos:
   - name: manifests
-    uri:  https://github.com/opendatahub-io/manifests/tarball/v0.7-branch-openshift
+    uri:  /home/croberts/src/manifests
   version: v0.7-branch-openshift
