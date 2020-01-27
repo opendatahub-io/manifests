@@ -4,4 +4,4 @@ bases:
 images:
 - name: gcr.io/kubeflow-images-public/notebook-controller
   newTag: latest
-  newName: quay.io/croberts/notebook-controller
+  newName: quay.io/kubeflow/notebook-controller:v0.7.0
