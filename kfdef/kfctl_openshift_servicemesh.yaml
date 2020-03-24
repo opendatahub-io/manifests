@@ -99,6 +99,7 @@ spec:
   - kustomizeConfig:
       overlays:
       - istio
+      - openshift
       repoRef:
         name: manifests
         path: jupyter/jupyter-web-app
