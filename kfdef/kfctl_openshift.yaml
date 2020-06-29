@@ -186,74 +186,74 @@ spec:
         name: manifests
         path: tf-training/tf-job-operator
     name: tf-job-operator
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: katib/katib-crds
-    name: katib-crds
-  - kustomizeConfig:
-      overlays:
-      - istio
-      - openshift
-      repoRef:
-        name: manifests
-        path: katib/katib-controller
-    name: katib-controller
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/api-service
-    name: api-service
-  - kustomizeConfig:
-      overlays:
-      - openshift
-      parameters:
-      - name: minioPvcName
-        value: minio-pv-claim
-      repoRef:
-        name: manifests
-        path: pipeline/minio
-    name: minio
-  - kustomizeConfig:
-      parameters:
-      - name: mysqlPvcName
-        value: mysql-pv-claim
-      repoRef:
-        name: manifests
-        path: pipeline/mysql
-    name: mysql
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/persistent-agent
-    name: persistent-agent
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/pipelines-runner
-    name: pipelines-runner
-  - kustomizeConfig:
-      overlays:
-      - istio
-      repoRef:
-        name: manifests
-        path: pipeline/pipelines-ui
-    name: pipelines-ui
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/pipelines-viewer
-    name: pipelines-viewer
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/scheduledworkflow
-    name: scheduledworkflow
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/pipeline-visualization-service
-    name: pipeline-visualization-service
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: katib/katib-crds
+  #   name: katib-crds
+  # - kustomizeConfig:
+  #     overlays:
+  #     - istio
+  #     - openshift
+  #     repoRef:
+  #       name: manifests
+  #       path: katib/katib-controller
+  #   name: katib-controller
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/api-service
+  #   name: api-service
+  # - kustomizeConfig:
+  #     overlays:
+  #     - openshift
+  #     parameters:
+  #     - name: minioPvcName
+  #       value: minio-pv-claim
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/minio
+  #   name: minio
+  # - kustomizeConfig:
+  #     parameters:
+  #     - name: mysqlPvcName
+  #       value: mysql-pv-claim
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/mysql
+  #   name: mysql
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/persistent-agent
+  #   name: persistent-agent
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/pipelines-runner
+  #   name: pipelines-runner
+  # - kustomizeConfig:
+  #     overlays:
+  #     - istio
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/pipelines-ui
+  #   name: pipelines-ui
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/pipelines-viewer
+  #   name: pipelines-viewer
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/scheduledworkflow
+  #   name: scheduledworkflow
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/pipeline-visualization-service
+  #   name: pipeline-visualization-service
   - kustomizeConfig:
       overlays:
       - istio
@@ -265,12 +265,12 @@ spec:
         name: manifests
         path: profiles
     name: profiles
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: seldon/seldon-core-operator
-    name: seldon-core-operator
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: seldon/seldon-core-operator
+  #   name: seldon-core-operator
   repos:
   - name: manifests
-    uri: https://github.com/opendatahub-io/manifests/tarball/v1.0-branch-openshift
+    uri: https://github.com/crobby/manifests/tarball/jupyterhub-1.0
   version: v1.0-branch-openshift
