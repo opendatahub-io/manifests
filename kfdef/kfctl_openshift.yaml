@@ -1,10 +1,10 @@
 # This is the config to install Kubeflow on an existing k8s cluster.
 # If the cluster already has istio, comment out the istio install part below.
-apiVersion: kfdef.apps.kubeflow.org/v1beta1
+apiVersion: kfdef.apps.kubeflow.org/v1
 kind: KfDef
 metadata:
   # If name is not set, kfctl will infer app name from the directory.
-  # name: myapp2
+  name: opendataflow
   namespace: kubeflow
 spec:
   applications:
@@ -127,7 +127,7 @@ spec:
   - kustomizeConfig:
       overlays:
       - istio
-      - openshift # We need to use custom controller to overcome fsGroup issue https://github.com/kubeflow/kubeflow/issues/4617
+#      - openshift # We need to use custom controller to overcome fsGroup issue https://github.com/kubeflow/kubeflow/issues/4617
       repoRef:
         name: manifests
         path: jupyter/notebook-controller
@@ -169,91 +169,91 @@ spec:
   #       name: manifests
   #       path: kfserving/kfserving-install
   #   name: kfserving-install
-  - kustomizeConfig:
-      overlays:
-      - istio
-      repoRef:
-        name: manifests
-        path: tensorboard
-    name: tensorboard
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: tf-training/tf-job-crds
-    name: tf-job-crds
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: tf-training/tf-job-operator
-    name: tf-job-operator
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: katib/katib-crds
-    name: katib-crds
-  - kustomizeConfig:
-      overlays:
-      - istio
-      - openshift
-      repoRef:
-        name: manifests
-        path: katib/katib-controller
-    name: katib-controller
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/api-service
-    name: api-service
-  - kustomizeConfig:
-      overlays:
-      - openshift
-      parameters:
-      - name: minioPvcName
-        value: minio-pv-claim
-      repoRef:
-        name: manifests
-        path: pipeline/minio
-    name: minio
-  - kustomizeConfig:
-      parameters:
-      - name: mysqlPvcName
-        value: mysql-pv-claim
-      repoRef:
-        name: manifests
-        path: pipeline/mysql
-    name: mysql
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/persistent-agent
-    name: persistent-agent
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/pipelines-runner
-    name: pipelines-runner
-  - kustomizeConfig:
-      overlays:
-      - istio
-      repoRef:
-        name: manifests
-        path: pipeline/pipelines-ui
-    name: pipelines-ui
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/pipelines-viewer
-    name: pipelines-viewer
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/scheduledworkflow
-    name: scheduledworkflow
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: pipeline/pipeline-visualization-service
-    name: pipeline-visualization-service
+  # - kustomizeConfig:
+  #     overlays:
+  #     - istio
+  #     repoRef:
+  #       name: manifests
+  #       path: tensorboard
+  #   name: tensorboard
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: tf-training/tf-job-crds
+  #   name: tf-job-crds
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: tf-training/tf-job-operator
+  #   name: tf-job-operator
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: katib/katib-crds
+  #   name: katib-crds
+  # - kustomizeConfig:
+  #     overlays:
+  #     - istio
+  #     - openshift
+  #     repoRef:
+  #       name: manifests
+  #       path: katib/katib-controller
+  #   name: katib-controller
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/api-service
+  #   name: api-service
+  # - kustomizeConfig:
+  #     overlays:
+  #     - openshift
+  #     parameters:
+  #     - name: minioPvcName
+  #       value: minio-pv-claim
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/minio
+  #   name: minio
+  # - kustomizeConfig:
+  #     parameters:
+  #     - name: mysqlPvcName
+  #       value: mysql-pv-claim
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/mysql
+  #   name: mysql
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/persistent-agent
+  #   name: persistent-agent
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/pipelines-runner
+  #   name: pipelines-runner
+  # - kustomizeConfig:
+  #     overlays:
+  #     - istio
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/pipelines-ui
+  #   name: pipelines-ui
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/pipelines-viewer
+  #   name: pipelines-viewer
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/scheduledworkflow
+  #   name: scheduledworkflow
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: pipeline/pipeline-visualization-service
+  #   name: pipeline-visualization-service
   - kustomizeConfig:
       overlays:
       - istio
@@ -265,12 +265,12 @@ spec:
         name: manifests
         path: profiles
     name: profiles
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
-        path: seldon/seldon-core-operator
-    name: seldon-core-operator
+  # - kustomizeConfig:
+  #     repoRef:
+  #       name: manifests
+  #       path: seldon/seldon-core-operator
+  #   name: seldon-core-operator
   repos:
   - name: manifests
-    uri: https://github.com/opendatahub-io/manifests/tarball/v1.0-branch-openshift
+    uri: https://github.com/crobby/manifests/tarball/1.0-jupyterhub
   version: v1.0-branch-openshift
