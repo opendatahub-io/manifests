@@ -13,6 +13,10 @@ spec:
     port: 8080
     protocol: TCP
     targetPort: 8080
+  - name: telemetry
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
   selector:
     app: workflow-controller
   sessionAffinity: None

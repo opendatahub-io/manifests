@@ -14,6 +14,12 @@ data:
         path: /metrics,
         port: 8080
     },
+    telemetryConfig:
+    {
+       enabled: true,
+       path: /metrics,
+       port: 8081
+    },
     artifactRepository:
     {
         s3: {
