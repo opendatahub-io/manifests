@@ -8,6 +8,7 @@ resources:
 - deployment.yaml
 - service-account.yaml
 - service.yaml
+- service-monitor.yaml
 commonLabels:
   kustomize.component: argo
 images:

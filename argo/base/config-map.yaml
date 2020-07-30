@@ -8,6 +8,12 @@ data:
     {
     executorImage: $(executorImage),
     containerRuntimeExecutor: $(containerRuntimeExecutor),
+    metricsConfig: 
+    {
+        enabled: true,
+        path: /metrics,
+        port: 8080
+    },
     artifactRepository:
     {
         s3: {
