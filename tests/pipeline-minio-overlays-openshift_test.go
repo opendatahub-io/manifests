@@ -13,145 +13,147 @@ import (
 	"testing"
 )
 
-func writeMysqlOverlaysApplication(th *KustTestHarness) {
-	th.writeF("/manifests/pipeline/mysql/overlays/application/application.yaml", `
-apiVersion: app.k8s.io/v1beta1
-kind: Application
-metadata:
-  name: mysql
-spec:
-  addOwnerRef: true
-  componentKinds:
-  - group: core
-    kind: ConfigMap
-  - group: apps
-    kind: Deployment
-  descriptor:
-    description: ''
-    keywords:
-    - mysql
-    - kubeflow
-    links:
-    - description: About
-      url: ''
-    maintainers: []
-    owners: []
-    type: mysql
-    version: v1beta1
-  selector:
-    matchLabels:
-      app.kubernetes.io/component: mysql
-      app.kubernetes.io/instance: mysql-0.2.5
-      app.kubernetes.io/managed-by: kfctl
-      app.kubernetes.io/name: mysql
-      app.kubernetes.io/part-of: kubeflow
-      app.kubernetes.io/version: 0.2.5
-`)
-	th.writeK("/manifests/pipeline/mysql/overlays/application", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-bases:
-- ../../base
-commonLabels:
-  app.kubernetes.io/component: mysql
-  app.kubernetes.io/instance: mysql-0.2.5
-  app.kubernetes.io/managed-by: kfctl
-  app.kubernetes.io/name: mysql
-  app.kubernetes.io/part-of: kubeflow
-  app.kubernetes.io/version: 0.2.5
-kind: Kustomization
-resources:
-- application.yaml
-`)
-	th.writeF("/manifests/pipeline/mysql/base/deployment.yaml", `
+func writeMinioOverlaysOpenshift(th *KustTestHarness) {
+	th.writeF("/manifests/pipeline/minio/overlays/openshift/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql
+  name: minio
+spec:
+  template:
+    spec:
+      serviceAccountName: minio
+`)
+	th.writeF("/manifests/pipeline/minio/overlays/openshift/serviceaccount.yaml", `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    component: minio
+  name: minio
+  namespace: kubeflow
+`)
+	th.writeK("/manifests/pipeline/minio/overlays/openshift", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kubeflow
+bases:
+- ../../base
+patchesStrategicMerge:
+- deployment.yaml
+resources:
+- serviceaccount.yaml
+`)
+	th.writeF("/manifests/pipeline/minio/base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
 spec:
   strategy:
     type: Recreate
   template:
     spec:
       containers:
-      - name: mysql
+      - name: minio
+        args:
+        - server
+        - /data
         env:
-        - name: MYSQL_ALLOW_EMPTY_PASSWORD
-          value: "true"
-        image: mysql:5.6
+        - name: MINIO_ACCESS_KEY
+          value: minio
+        - name: MINIO_SECRET_KEY
+          value: minio123
+        image: minio/minio:RELEASE.2018-02-09T22-40-05Z
         ports:
-        - containerPort: 3306
-          name: mysql
+        - containerPort: 9000
         volumeMounts:
-        - mountPath: /var/lib/mysql
-          name: mysql-persistent-storage
+        - mountPath: /data
+          name: data
+          subPath: minio
       volumes:
-      - name: mysql-persistent-storage
+      - name: data
         persistentVolumeClaim:
-          claimName: $(mysqlPvcName)
+          claimName: $(minioPvcName)
 `)
-	th.writeF("/manifests/pipeline/mysql/base/service.yaml", `
+	th.writeF("/manifests/pipeline/minio/base/secret.yaml", `
+apiVersion: v1
+data:
+  accesskey: bWluaW8=
+  secretkey: bWluaW8xMjM=
+kind: Secret
+metadata:
+  name: mlpipeline-minio-artifact
+type: Opaque
+`)
+	th.writeF("/manifests/pipeline/minio/base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql
+  name: minio-service
 spec:
   ports:
-  - port: 3306
+  - port: 9000
+    protocol: TCP
+    targetPort: 9000
+  selector:
+    app: minio
 `)
-	th.writeF("/manifests/pipeline/mysql/base/persistent-volume-claim.yaml", `
+	th.writeF("/manifests/pipeline/minio/base/persistent-volume-claim.yaml", `
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: $(mysqlPvcName)
+  name: $(minioPvcName)
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 20Gi`)
-	th.writeF("/manifests/pipeline/mysql/base/params.yaml", `
+      storage: 20Gi
+`)
+	th.writeF("/manifests/pipeline/minio/base/params.yaml", `
 varReference:
 - path: spec/template/spec/volumes/persistentVolumeClaim/claimName
   kind: Deployment
 - path: metadata/name
   kind: PersistentVolumeClaim`)
-	th.writeF("/manifests/pipeline/mysql/base/params.env", `
-mysqlPvcName=
-`)
-	th.writeK("/manifests/pipeline/mysql/base", `
+	th.writeF("/manifests/pipeline/minio/base/params.env", `
+minioPvcName=`)
+	th.writeK("/manifests/pipeline/minio/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 commonLabels:
-  app: mysql
+  app: minio
 resources:
 - deployment.yaml
+- secret.yaml
 - service.yaml
 - persistent-volume-claim.yaml
 configMapGenerator:
-- name: pipeline-mysql-parameters
+- name: pipeline-minio-parameters
   env: params.env
 generatorOptions:
   disableNameSuffixHash: true
 vars:
-- name: mysqlPvcName
+- name: minioPvcName
   objref:
     kind: ConfigMap
-    name: pipeline-mysql-parameters
+    name: pipeline-minio-parameters
     apiVersion: v1
   fieldref:
-    fieldpath: data.mysqlPvcName
+    fieldpath: data.minioPvcName
 images:
-- name: mysql
-  newTag: '5.6'
-  newName: mysql
+- name: minio/minio
+  newTag: RELEASE.2018-02-09T22-40-05Z
+  newName: minio/minio
 configurations:
 - params.yaml
 `)
 }
 
-func TestMysqlOverlaysApplication(t *testing.T) {
-	th := NewKustTestHarness(t, "/manifests/pipeline/mysql/overlays/application")
-	writeMysqlOverlaysApplication(th)
+func TestMinioOverlaysOpenshift(t *testing.T) {
+	th := NewKustTestHarness(t, "/manifests/pipeline/minio/overlays/openshift")
+	writeMinioOverlaysOpenshift(th)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
@@ -160,7 +162,7 @@ func TestMysqlOverlaysApplication(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	targetPath := "../pipeline/mysql/overlays/application"
+	targetPath := "../pipeline/minio/overlays/openshift"
 	fsys := fs.MakeRealFS()
 	lrc := loader.RestrictionRootOnly
 	_loader, loaderErr := loader.NewLoader(lrc, validators.MakeFakeValidator(), targetPath, fsys)

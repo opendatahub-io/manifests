@@ -13,64 +13,65 @@ import (
 	"testing"
 )
 
-func writeSeldonCoreOperatorOverlaysApplication(th *KustTestHarness) {
-	th.writeF("/manifests/seldon/seldon-core-operator/overlays/application/application.yaml", `
-apiVersion: app.k8s.io/v1beta1
-kind: Application
-metadata:
-  name: seldon-core-operator
-spec:
-  componentKinds:
-  - group: apps/v1
-    kind: StatefulSet
-  - group: v1
-    kind: Service
-  - group: apps/v1
-    kind: Deployment
-  - group: v1
-    kind: Secret
-  - group: v1
-    kind: ConfigMap
-  description: Seldon allows users to create ML Inference Graphs to deploy their models
-    and serve predictions
-  icons: null
-  keywords:
-  - seldon
-  - inference
-  links:
-  - description: Docs
-    url: https://docs.seldon.io/projects/seldon-core/en/v1.0.1/
-  maintainers:
-  - email: dev@seldon.io
-    name: Seldon
-  owners:
-  - email: dev@seldon.io
-    name: Seldon
-  selector:
-    matchLabels:
-      app.kubernetes.io/component: seldon
-      app.kubernetes.io/instance: seldon-1.15
-      app.kubernetes.io/managed-by: kfctl
-      app.kubernetes.io/name: seldon
-      app.kubernetes.io/part-of: kubeflow
-      app.kubernetes.io/version: '1.15'
-  type: seldon-core-operator
-  version: v1
+func writeSeldonCoreOperatorOverlaysOpenshift(th *KustTestHarness) {
+	th.writeF("/manifests/seldon/seldon-core-operator/overlays/openshift/patchport.yaml", `
+- op: add
+  path: /webhooks/0/clientConfig/service/port
+  value: 8443
+- op: replace
+  path: /webhooks/0/name
+  value: v1.mseldondeployment.kb.io
+- op: add
+  path: /webhooks/1/clientConfig/service/port
+  value: 8443
+- op: replace
+  path: /webhooks/1/name
+  value: v1alpha2.mseldondeployment.kb.io
+- op: add
+  path: /webhooks/2/clientConfig/service/port
+  value: 8443
+- op: replace
+  path: /webhooks/2/name
+  value: v1alpha3.mseldondeployment.kb.io
 `)
-	th.writeK("/manifests/seldon/seldon-core-operator/overlays/application", `
-apiVersion: kustomize.config.k8s.io/v1beta1
+	th.writeF("/manifests/seldon/seldon-core-operator/overlays/openshift/vpatchport.yaml", `
+- op: add
+  path: /webhooks/0/clientConfig/service/port
+  value: 8443
+- op: replace
+  path: /webhooks/0/name
+  value: v1.vseldondeployment.kb.io
+- op: add
+  path: /webhooks/1/clientConfig/service/port
+  value: 8443
+- op: replace
+  path: /webhooks/1/name
+  value: v1alpha2.vseldondeployment.kb.io
+- op: add
+  path: /webhooks/2/clientConfig/service/port
+  value: 8443
+- op: replace
+  path: /webhooks/2/name
+  value: v1alpha3.vseldondeployment.kb.io
+`)
+	th.writeK("/manifests/seldon/seldon-core-operator/overlays/openshift", `
 bases:
 - ../../base
-commonLabels:
-  app.kubernetes.io/component: seldon
-  app.kubernetes.io/instance: seldon-1.15
-  app.kubernetes.io/managed-by: kfctl
-  app.kubernetes.io/name: seldon-core-operator
-  app.kubernetes.io/part-of: kubeflow
-  app.kubernetes.io/version: '1.15'
-kind: Kustomization
-resources:
-- application.yaml
+
+patchesJson6902:
+- target:
+    kind: MutatingWebhookConfiguration
+    version: v1beta1
+    group: admissionregistration.k8s.io
+    name: seldon-mutating-webhook-configuration-kubeflow
+  path: patchport.yaml
+
+- target:
+    kind: ValidatingWebhookConfiguration
+    version: v1beta1
+    group: admissionregistration.k8s.io
+    name: seldon-validating-webhook-configuration-kubeflow
+  path: vpatchport.yaml
 `)
 	th.writeF("/manifests/seldon/seldon-core-operator/base/resources.yaml", `
 ---
@@ -3751,9 +3752,9 @@ resources:
 `)
 }
 
-func TestSeldonCoreOperatorOverlaysApplication(t *testing.T) {
-	th := NewKustTestHarness(t, "/manifests/seldon/seldon-core-operator/overlays/application")
-	writeSeldonCoreOperatorOverlaysApplication(th)
+func TestSeldonCoreOperatorOverlaysOpenshift(t *testing.T) {
+	th := NewKustTestHarness(t, "/manifests/seldon/seldon-core-operator/overlays/openshift")
+	writeSeldonCoreOperatorOverlaysOpenshift(th)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
@@ -3762,7 +3763,7 @@ func TestSeldonCoreOperatorOverlaysApplication(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	targetPath := "../seldon/seldon-core-operator/overlays/application"
+	targetPath := "../seldon/seldon-core-operator/overlays/openshift"
 	fsys := fs.MakeRealFS()
 	lrc := loader.RestrictionRootOnly
 	_loader, loaderErr := loader.NewLoader(lrc, validators.MakeFakeValidator(), targetPath, fsys)

@@ -13,45 +13,145 @@ import (
 	"testing"
 )
 
-func writeJupyterWebAppOverlaysIstio(th *KustTestHarness) {
-	th.writeF("/manifests/jupyter/jupyter-web-app/overlays/istio/virtual-service.yaml", `
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
+func writeJupyterWebAppOverlaysOpenshift(th *KustTestHarness) {
+	th.writeF("/manifests/jupyter/jupyter-web-app/overlays/openshift/config-map.yaml", `
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: jupyter-web-app
-spec:
-  gateways:
-  - kubeflow-gateway
-  hosts:
-  - '*'
-  http:
-  - headers:
-      request:
-        add:
-          x-forwarded-prefix: /jupyter
-    match:
-    - uri:
-        prefix: /jupyter/
-    rewrite:
-      uri: /
-    route:
-    - destination:
-        host: jupyter-web-app-service.$(namespace).svc.$(clusterDomain)
-        port:
-          number: 80
-`)
-	th.writeF("/manifests/jupyter/jupyter-web-app/overlays/istio/params.yaml", `
-varReference:
-- path: spec/http/route/destination/host
-  kind: VirtualService
-`)
-	th.writeK("/manifests/jupyter/jupyter-web-app/overlays/istio", `
+  name: config
+data:
+  spawner_ui_config.yaml: |
+    # Configuration file for the Jupyter UI.
+    #
+    # Each Jupyter UI option is configured by two keys: 'value' and 'readOnly'
+    # - The 'value' key contains the default value
+    # - The 'readOnly' key determines if the option will be available to users
+    #
+    # If the 'readOnly' key is present and set to 'true', the respective option
+    # will be disabled for users and only set by the admin. Also when a
+    # Notebook is POSTED to the API if a necessary field is not present then
+    # the value from the config will be used.
+    #
+    # If the 'readOnly' key is missing (defaults to 'false'), the respective option
+    # will be available for users to edit.
+    #
+    # Note that some values can be templated. Such values are the names of the
+    # Volumes as well as their StorageClass
+    spawnerFormDefaults:
+      image:
+        # The container Image for the user's Jupyter Notebook
+        # If readonly, this value must be a member of the list below
+        value: quay.io/kubeflow/tf-notebook-image:v0.7.0
+        # The list of available standard container Images
+        options:
+          - quay.io/kubeflow/tf-notebook-image:v0.7.0
+        # By default, custom container Images are allowed
+        # Uncomment the following line to only enable standard container Images
+        readOnly: false
+      cpu:
+        # CPU for user's Notebook
+        value: '0.5'
+        readOnly: false
+      memory:
+        # Memory for user's Notebook
+        value: 1.0Gi
+        readOnly: false
+      workspaceVolume:
+        # Workspace Volume to be attached to user's Notebook
+        # Each Workspace Volume is declared with the following attributes:
+        # Type, Name, Size, MountPath and Access Mode
+        value:
+          type:
+            # The Type of the Workspace Volume
+            # Supported values: 'New', 'Existing'
+            value: New
+          name:
+            # The Name of the Workspace Volume
+            # Note that this is a templated value. Special values:
+            # {notebook-name}: Replaced with the name of the Notebook. The frontend
+            #                  will replace this value as the user types the name
+            value: 'workspace-{notebook-name}'
+          size:
+            # The Size of the Workspace Volume (in Gi)
+            value: '10Gi'
+          mountPath:
+            # The Path that the Workspace Volume will be mounted
+            value: /home/jovyan
+          accessModes:
+            # The Access Mode of the Workspace Volume
+            # Supported values: 'ReadWriteOnce', 'ReadWriteMany', 'ReadOnlyMany'
+            value: ReadWriteOnce
+          class:
+            # The StrageClass the PVC will use if type is New. Special values are:
+            # {none}: default StorageClass
+            # {empty}: empty string ""
+            value: '{none}'
+        readOnly: false
+      dataVolumes:
+        # List of additional Data Volumes to be attached to the user's Notebook
+        value: []
+        # Each Data Volume is declared with the following attributes:
+        # Type, Name, Size, MountPath and Access Mode
+        #
+        # For example, a list with 2 Data Volumes:
+        # value:
+        #   - value:
+        #       type:
+        #         value: New
+        #       name:
+        #         value: '{notebook-name}-vol-1'
+        #       size:
+        #         value: '10Gi'
+        #       class:
+        #         value: standard
+        #       mountPath:
+        #         value: /home/jovyan/vol-1
+        #       accessModes:
+        #         value: ReadWriteOnce
+        #       class:
+        #         value: {none}
+        #   - value:
+        #       type:
+        #         value: New
+        #       name:
+        #         value: '{notebook-name}-vol-2'
+        #       size:
+        #         value: '10Gi'
+        #       mountPath:
+        #         value: /home/jovyan/vol-2
+        #       accessModes:
+        #         value: ReadWriteMany
+        #       class:
+        #         value: {none}
+        readOnly: false
+      extraResources:
+        # Extra Resource Limits for user's Notebook
+        # e.x. "{'nvidia.com/gpu': 2}"
+        value: "{}"
+        readOnly: false
+      shm:
+        value: true
+        readOnly: false
+      configurations:
+        # List of labels to be selected, these are the labels from PodDefaults
+        # value:
+        #   - add-gcp-secret
+        #   - default-editor
+        value: []
+        readOnly: false`)
+	th.writeK("/manifests/jupyter/jupyter-web-app/overlays/openshift", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-resources:
-- virtual-service.yaml
-configurations:
-- params.yaml
+namespace: kubeflow
+bases:
+- ../../base
+patchesStrategicMerge:
+- config-map.yaml
+
+images:
+- name: gcr.io/kubeflow-images-public/jupyter-web-app
+  newTag: v1.0.0
+  newName: quay.io/kubeflow/jupyter-web-app
 `)
 	th.writeF("/manifests/jupyter/jupyter-web-app/base/cluster-role-binding.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1
@@ -531,9 +631,9 @@ configurations:
 `)
 }
 
-func TestJupyterWebAppOverlaysIstio(t *testing.T) {
-	th := NewKustTestHarness(t, "/manifests/jupyter/jupyter-web-app/overlays/istio")
-	writeJupyterWebAppOverlaysIstio(th)
+func TestJupyterWebAppOverlaysOpenshift(t *testing.T) {
+	th := NewKustTestHarness(t, "/manifests/jupyter/jupyter-web-app/overlays/openshift")
+	writeJupyterWebAppOverlaysOpenshift(th)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
@@ -542,7 +642,7 @@ func TestJupyterWebAppOverlaysIstio(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	targetPath := "../jupyter/jupyter-web-app/overlays/istio"
+	targetPath := "../jupyter/jupyter-web-app/overlays/openshift"
 	fsys := fs.MakeRealFS()
 	lrc := loader.RestrictionRootOnly
 	_loader, loaderErr := loader.NewLoader(lrc, validators.MakeFakeValidator(), targetPath, fsys)

@@ -13,7 +13,54 @@ import (
 	"testing"
 )
 
-func writePytorchOperatorBase(th *KustTestHarness) {
+func writePytorchOperatorOverlaysOpenshift(th *KustTestHarness) {
+	th.writeF("/manifests/pytorch-job/pytorch-operator/overlays/openshift/init-container-configmap.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pytorch-config
+data:
+  initContainer.yaml: |
+    - name: init-pytorch
+      image: alpine:3.10
+      imagePullPolicy: IfNotPresent
+      resources:
+        limits:
+          cpu: 100m
+          memory: 20Mi
+        requests:
+          cpu: 50m
+          memory: 10Mi
+      command: ['sh', '-c', 'until nslookup {{.MasterAddr}}; do echo waiting for master; sleep 2; done;']`)
+	th.writeF("/manifests/pytorch-job/pytorch-operator/overlays/openshift/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pytorch-operator
+spec:
+  template:
+    spec:
+      containers:
+      - name: pytorch-operator
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+      volumes:
+      - name: config-volume
+        configMap:
+          name: pytorch-config`)
+	th.writeK("/manifests/pytorch-job/pytorch-operator/overlays/openshift", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+- ../../base
+resources:
+- init-container-configmap.yaml
+
+patchesStrategicMerge:
+- deployment.yaml
+
+`)
 	th.writeF("/manifests/pytorch-job/pytorch-operator/base/cluster-role-binding.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -205,9 +252,9 @@ images:
 `)
 }
 
-func TestPytorchOperatorBase(t *testing.T) {
-	th := NewKustTestHarness(t, "/manifests/pytorch-job/pytorch-operator/base")
-	writePytorchOperatorBase(th)
+func TestPytorchOperatorOverlaysOpenshift(t *testing.T) {
+	th := NewKustTestHarness(t, "/manifests/pytorch-job/pytorch-operator/overlays/openshift")
+	writePytorchOperatorOverlaysOpenshift(th)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
@@ -216,7 +263,7 @@ func TestPytorchOperatorBase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	targetPath := "../pytorch-job/pytorch-operator/base"
+	targetPath := "../pytorch-job/pytorch-operator/overlays/openshift"
 	fsys := fs.MakeRealFS()
 	lrc := loader.RestrictionRootOnly
 	_loader, loaderErr := loader.NewLoader(lrc, validators.MakeFakeValidator(), targetPath, fsys)

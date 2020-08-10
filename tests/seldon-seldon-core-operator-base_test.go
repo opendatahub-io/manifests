@@ -3362,8 +3362,8 @@ metadata:
   namespace: 'kubeflow'
 spec:
   ports:
-  - port: 443
-    targetPort: 443
+  - port: 8443
+    targetPort: 8443
   selector:
     app: seldon
     app.kubernetes.io/instance: seldon1
@@ -3407,7 +3407,7 @@ spec:
       containers:
       - args:
         - --enable-leader-election
-        - --webhook-port=443
+        - --webhook-port=8443
         - ''
         command:
         - /manager
@@ -3428,8 +3428,6 @@ spec:
           value: 'IfNotPresent'
         - name: ENGINE_CONTAINER_SERVICE_ACCOUNT_NAME
           value: 'default'
-        - name: ENGINE_CONTAINER_USER
-          value: '8888'
         - name: ENGINE_LOG_MESSAGES_EXTERNALLY
           value: 'false'
         - name: PREDICTIVE_UNIT_SERVICE_PORT
@@ -3450,7 +3448,7 @@ spec:
         imagePullPolicy: 'IfNotPresent'
         name: manager
         ports:
-        - containerPort: 443
+        - containerPort: 8443
           name: webhook-server
           protocol: TCP
         - containerPort: 8080
@@ -3459,7 +3457,7 @@ spec:
         resources:
           limits:
             cpu: 100m
-            memory: 30Mi
+            memory: 300Mi
           requests:
             cpu: 100m
             memory: 20Mi

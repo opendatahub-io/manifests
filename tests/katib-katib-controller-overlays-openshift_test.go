@@ -13,7 +13,88 @@ import (
 	"testing"
 )
 
-func writeKatibControllerBase(th *KustTestHarness) {
+func writeKatibControllerOverlaysOpenshift(th *KustTestHarness) {
+	th.writeF("/manifests/katib/katib-controller/overlays/openshift/katib-mysql-secret.yaml", `
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: katib-mysql-secrets
+data:
+  MYSQL_ROOT_PASSWORD: dGVzdA== # "test"
+  MYSQL_USER: dGVzdA== #test
+  MYSQL_PASSWORD: dGVzdC9wYXNzd29yZA== #test/password
+`)
+	th.writeF("/manifests/katib/katib-controller/overlays/openshift/katib-mysql-deployment-patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: katib-mysql
+spec:
+  template:
+    spec:
+      containers:
+      - name: katib-mysql
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: katib-mysql-secrets
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: katib-mysql-secrets
+              key: MYSQL_PASSWORD
+        - name: MYSQL_LOWER_CASE_TABLE_NAMES
+          value: '1'
+`)
+	th.writeF("/manifests/katib/katib-controller/overlays/openshift/katib-controller-deployment.yaml", `
+- op: add
+  path: /spec/template/spec/containers/0/args/-
+  value: '--webhook-inject-securitycontext=true'
+`)
+	th.writeF("/manifests/katib/katib-controller/overlays/openshift/katib-mysql-deployment.yaml", `
+- op: replace
+  path: /spec/template/spec/containers/0/livenessProbe/exec/command/2
+  value: 'mysqladmin ping -uroot'
+- op: replace
+  path: /spec/template/spec/containers/0/readinessProbe/exec/command/2
+  value: 'mysql -D ${MYSQL_DATABASE} -uroot -e ''SELECT 1'''
+- op: remove
+  path: /spec/template/spec/containers/0/args
+- op: replace
+  path: /spec/template/spec/containers/0/volumeMounts/0/mountPath
+  value: /var/lib/mysql/data`)
+	th.writeK("/manifests/katib/katib-controller/overlays/openshift", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+- ../../base
+#patchesStrategicMerge:
+#- katib-controller-deployment.yaml
+patchesStrategicMerge:
+- katib-mysql-secret.yaml
+- katib-mysql-deployment-patch.yaml
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: katib-controller
+  path: katib-controller-deployment.yaml
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: katib-mysql
+  path: katib-mysql-deployment.yaml
+
+images:
+- name: mysql
+  newTag: "latest"
+  newName: registry.redhat.io/rhscl/mysql-80-rhel7
+`)
 	th.writeF("/manifests/katib/katib-controller/base/katib-configmap.yaml", `
 apiVersion: v1
 kind: ConfigMap
@@ -662,9 +743,9 @@ configurations:
 `)
 }
 
-func TestKatibControllerBase(t *testing.T) {
-	th := NewKustTestHarness(t, "/manifests/katib/katib-controller/base")
-	writeKatibControllerBase(th)
+func TestKatibControllerOverlaysOpenshift(t *testing.T) {
+	th := NewKustTestHarness(t, "/manifests/katib/katib-controller/overlays/openshift")
+	writeKatibControllerOverlaysOpenshift(th)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
@@ -673,7 +754,7 @@ func TestKatibControllerBase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	targetPath := "../katib/katib-controller/base"
+	targetPath := "../katib/katib-controller/overlays/openshift"
 	fsys := fs.MakeRealFS()
 	lrc := loader.RestrictionRootOnly
 	_loader, loaderErr := loader.NewLoader(lrc, validators.MakeFakeValidator(), targetPath, fsys)

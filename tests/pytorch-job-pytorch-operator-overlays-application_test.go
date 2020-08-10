@@ -103,6 +103,7 @@ rules:
   resources:
   - pytorchjobs
   - pytorchjobs/status
+  - pytorchjobs/finalizers
   verbs:
   - '*'
 - apiGroups:
