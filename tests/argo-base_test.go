@@ -137,18 +137,6 @@ data:
     {
     executorImage: $(executorImage),
     containerRuntimeExecutor: $(containerRuntimeExecutor),
-    metricsConfig: 
-    {
-        enabled: true,
-        path: /metrics,
-        port: 8080
-    },
-    telemetryConfig:
-    {
-       enabled: true,
-       path: /metrics,
-       port: 8081
-    },
     artifactRepository:
     {
         s3: {
@@ -337,31 +325,6 @@ spec:
   sessionAffinity: None
   type: NodePort
 `)
-	th.writeF("/manifests/argo/base/service-monitor.yaml", `
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: workflow-controller
-  annotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/path: '/metrics'
-  name: argo-metrics
-spec:
-  ports:
-  - name: metrics
-    port: 8080
-    protocol: TCP
-    targetPort: 8080
-  - name: telemetry
-    port: 8081
-    protocol: TCP
-    targetPort: 8081
-  selector:
-    app: workflow-controller
-  sessionAffinity: None
-  type: ClusterIP
-`)
 	th.writeF("/manifests/argo/base/params.yaml", `
 varReference:
 - path: data/config
@@ -396,7 +359,6 @@ resources:
 - deployment.yaml
 - service-account.yaml
 - service.yaml
-- service-monitor.yaml
 commonLabels:
   kustomize.component: argo
 images:
