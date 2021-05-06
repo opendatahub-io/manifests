@@ -1,0 +1,10 @@
+apiVersion: v1alpha1
+kind: ApplyResources
+metadata:
+  name: myTransformer
+spec:
+  fieldSpecs:
+    - kind: Secret
+      version: v1
+    - kind: ConfigMap
+      version: v1
