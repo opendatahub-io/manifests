@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dataset-operator
+  namespace: dlf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: dataset-operator
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        app.kubernetes.io/name: dlf
+        name: dataset-operator
+    spec:
+      containers:
+      - command:
+        - dataset-operator
+        env:
+        - name: WATCH_NAMESPACE
+          value: ""
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: dataset-operator
+        - name: OPERATOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: quay.io/datashim/dataset-operator:latest-amd64
+        imagePullPolicy: Always
+        name: dataset-operator
+        ports:
+        - containerPort: 8443
+          name: webhook-api
+        volumeMounts:
+        - mountPath: /run/secrets/tls
+          name: webhook-tls-certs
+          readOnly: true
+      initContainers:
+      - env:
+        - name: DATASET_OPERATOR_NAMESPACE
+          value: dlf
+        image: quay.io/datashim/generate-keys:latest-amd64
+        imagePullPolicy: Always
+        name: generate-keys
+      serviceAccountName: dataset-operator
+      volumes:
+      - name: webhook-tls-certs
+        secret:
+          secretName: webhook-server-tls

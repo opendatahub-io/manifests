@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: csi-controller-h3
+  namespace: dlf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csi-controller-h3
+  serviceName: csi-controller-h3
+  template:
+    metadata:
+      labels:
+        app: csi-controller-h3
+        app.kubernetes.io/name: dlf
+    spec:
+      containers:
+      - args:
+        - --v=5
+        - --csi-address=$(ADDRESS)
+        env:
+        - name: ADDRESS
+          value: /csi/csi.sock
+        image: quay.io/k8scsi/csi-attacher:v2.2.0
+        name: csi-attacher
+        volumeMounts:
+        - mountPath: /csi
+          name: socket-dir
+      - args:
+        - --v=5
+        - --pod-info-mount-version="v1"
+        - --csi-address=$(ADDRESS)
+        env:
+        - name: ADDRESS
+          value: /csi/csi.sock
+        image: quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1
+        name: csi-cluster-driver-registrar
+        volumeMounts:
+        - mountPath: /csi
+          name: socket-dir
+      - args:
+        - --nodeid=$(NODE_ID)
+        - --endpoint=$(CSI_ENDPOINT)
+        env:
+        - name: NODE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: CSI_ENDPOINT
+          value: unix://plugin/csi.sock
+        image: carvicsforth/csi-h3:v1.2.0
+        name: h3
+        volumeMounts:
+        - mountPath: /plugin
+          name: socket-dir
+      serviceAccountName: csi-controller-h3
+      volumes:
+      - name: socket-dir

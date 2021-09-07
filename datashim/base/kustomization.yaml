@@ -1,0 +1,91 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: dlf
+
+# Labels to add to all resources and selectors.
+commonLabels:
+  app.kubernetes.io/name: "dlf"
+
+# Images modify the tags for images without
+# creating patches.
+images:
+- name: carvicsforth/csi-h3
+  newTag: v1.2.0
+- name: quay.io/datashim/csi-nfs
+  newTag: 0.1.0-amd64
+- name: quay.io/datashim/csi-s3
+  newTag: 0.1.0-amd64
+- name: quay.io/datashim/dataset-operator
+  newTag: 0.1.0-amd64
+- name: quay.io/datashim/generate-keys
+  newTag: 0.1.0-amd64
+- name: quay.io/k8scsi/csi-attacher
+  newTag: v2.2.0
+- name: quay.io/k8scsi/csi-cluster-driver-registrar
+  newTag: v1.0.1
+- name: quay.io/k8scsi/csi-node-driver-registrar
+  newTag: v1.2.0
+- name: quay.io/k8scsi/csi-provisioner
+  newTag: v2.0.2
+
+# List of resource files that kustomize reads, modifies
+# and emits as a YAML string
+resources:
+- namespace.yaml
+- ch.ctrox.csi.s3-driver-csidriver.yaml
+- csi-attacher-nfs-sa.yaml
+- csi-attacher-nfsplugin-statefulset.yaml
+- csi-attacher-nfsplugin-svc.yaml
+- csi-attacher-role-cfg-rb.yaml
+- csi-attacher-role-crb.yaml
+- csi-attacher-role-h3-crb.yaml
+- csi-attacher-role-nfs-crb.yaml
+- csi-attacher-s3-statefulset.yaml
+- csi-attacher-s3-svc.yaml
+- csi-attacher-sa.yaml
+- csi-cluster-driver-registrar-binding-h3-crb.yaml
+- csi-cluster-driver-registrar-role-h3-clusterrole.yaml
+- csi-controller-h3-sa.yaml
+- csi-controller-h3-statefulset.yaml
+- csi-nodeplugin-clusterrole.yaml
+- csi-nodeplugin-crb.yaml
+- csi-nodeplugin-h3-clusterrole.yaml
+- csi-nodeplugin-h3-crb.yaml
+- csi-nodeplugin-h3-ds.yaml
+- csi-nodeplugin-h3-sa.yaml
+- csi-nodeplugin-nfsplugin-ds.yaml
+- csi-nodeplugin-sa.yaml
+- csi-provisioner-role-cfg-rb.yaml
+- csi-provisioner-role-crb.yaml
+- csi-provisioner-s3-statefulset.yaml
+- csi-provisioner-s3-svc.yaml
+- csi-provisioner-sa.yaml
+- csi-s3-clusterrole.yaml
+- csi-s3-crb.yaml
+- csi-s3-ds.yaml
+- csi-s3-sa.yaml
+- csi-s3-storageclass.yaml
+- dataset-operator-clusterrole.yaml
+- dataset-operator-crb.yaml
+- dataset-operator-deploy.yaml
+- dataset-operator-sa.yaml
+- datasets.com.ie.ibm.hpsys-crd.yaml
+- datasetsinternal.com.ie.ibm.hpsys-crd.yaml
+- dlf-mutating-webhook-cfg-mutatingwebhookconfiguration.yaml
+- external-attacher-cfg-role.yaml
+- external-attacher-runner-clusterrole.yaml
+- external-attacher-runner-nfs-clusterrole.yaml
+- external-controller-h3-clusterrole.yaml
+- external-provisioner-cfg-role.yaml
+- external-provisioner-runner-clusterrole.yaml
+- h3-storageclass.yaml
+- webhook-server-svc.yaml
+
+# Each entry in this list results in the creation of
+# one Secret resource (it's a generator of n secrets).
+secretGenerator:
+- files:
+  - tls.crt
+  - tls.key
+  name: webhook-server-tls
+  type: kubernetes.io/tls

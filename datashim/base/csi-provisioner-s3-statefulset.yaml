@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: csi-provisioner-s3
+  namespace: dlf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csi-provisioner-s3
+  serviceName: csi-provisioner-s3
+  template:
+    metadata:
+      labels:
+        app: csi-provisioner-s3
+    spec:
+      containers:
+      - args:
+        - -v=5
+        - --csi-address=/csi/csi.sock
+        - --feature-gates=Topology=true
+        image: quay.io/k8scsi/csi-provisioner:v2.0.2
+        imagePullPolicy: Always
+        name: csi-provisioner
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /csi
+          name: socket-dir
+      serviceAccountName: csi-provisioner
+      volumes:
+      - hostPath:
+          path: /var/lib/kubelet/plugins/csi-s3
+          type: DirectoryOrCreate
+        name: socket-dir

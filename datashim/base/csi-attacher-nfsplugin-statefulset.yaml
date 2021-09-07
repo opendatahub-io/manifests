@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: csi-attacher-nfsplugin
+  namespace: dlf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csi-attacher-nfsplugin
+  serviceName: csi-attacher-nfsplugin
+  template:
+    metadata:
+      labels:
+        app: csi-attacher-nfsplugin
+        app.kubernetes.io/name: dlf
+    spec:
+      containers:
+      - args:
+        - --v=10
+        - --csi-address=$(ADDRESS)
+        env:
+        - name: ADDRESS
+          value: /csi/csi.sock
+        image: quay.io/k8scsi/csi-attacher:v2.2.0
+        imagePullPolicy: Always
+        name: csi-attacher
+        volumeMounts:
+        - mountPath: /csi
+          name: socket-dir
+      - args:
+        - --nodeid=$(NODE_ID)
+        - --endpoint=$(CSI_ENDPOINT)
+        env:
+        - name: NODE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: CSI_ENDPOINT
+          value: unix://plugin/csi.sock
+        image: quay.io/datashim/csi-nfs:latest-amd64
+        imagePullPolicy: Always
+        name: nfs
+        volumeMounts:
+        - mountPath: /plugin
+          name: socket-dir
+      serviceAccountName: csi-attacher-nfs
+      volumes:
+      - name: socket-dir

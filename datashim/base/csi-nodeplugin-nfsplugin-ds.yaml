@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: csi-nodeplugin-nfsplugin
+  namespace: dlf
+spec:
+  selector:
+    matchLabels:
+      app: csi-nodeplugin-nfsplugin
+  template:
+    metadata:
+      labels:
+        app: csi-nodeplugin-nfsplugin
+        app.kubernetes.io/name: dlf
+    spec:
+      containers:
+      - args:
+        - --v=10
+        - --csi-address=/plugin/csi.sock
+        - --kubelet-registration-path=/var/lib/kubelet/plugins/csi-nfsplugin/csi.sock
+        env:
+        - name: KUBE_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - rm -rf /registration/csi-nfsplugin /registration/csi-nfsplugin-reg.sock
+        name: node-driver-registrar
+        volumeMounts:
+        - mountPath: /plugin
+          name: plugin-dir
+        - mountPath: /registration
+          name: registration-dir
+      - args:
+        - --nodeid=$(NODE_ID)
+        - --endpoint=$(CSI_ENDPOINT)
+        env:
+        - name: NODE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: CSI_ENDPOINT
+          value: unix://plugin/csi.sock
+        image: quay.io/datashim/csi-nfs:latest-amd64
+        imagePullPolicy: Always
+        name: nfs
+        securityContext:
+          allowPrivilegeEscalation: true
+          capabilities:
+            add:
+            - SYS_ADMIN
+          privileged: true
+        volumeMounts:
+        - mountPath: /plugin
+          name: plugin-dir
+        - mountPath: /var/lib/kubelet/pods
+          mountPropagation: Bidirectional
+          name: pods-mount-dir
+      hostNetwork: true
+      serviceAccountName: csi-nodeplugin
+      volumes:
+      - hostPath:
+          path: /var/lib/kubelet/plugins/csi-nfsplugin
+          type: DirectoryOrCreate
+        name: plugin-dir
+      - hostPath:
+          path: /var/lib/kubelet/pods
+          type: Directory
+        name: pods-mount-dir
+      - hostPath:
+          path: /var/lib/kubelet/plugins_registry
+          type: Directory
+        name: registration-dir

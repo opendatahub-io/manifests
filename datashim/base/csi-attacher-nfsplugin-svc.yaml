@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: csi-attacher-nfsplugin
+  name: csi-attacher-nfsplugin
+  namespace: dlf
+spec:
+  ports:
+  - name: dummy
+    port: 12345
+  selector:
+    app: csi-attacher-nfsplugin

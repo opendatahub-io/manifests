@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: csi-attacher-s3
+  namespace: dlf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csi-attacher-s3
+  serviceName: csi-attacher-s3
+  template:
+    metadata:
+      labels:
+        app: csi-attacher-s3
+        app.kubernetes.io/name: dlf
+    spec:
+      containers:
+      - args:
+        - --v=5
+        - --csi-address=/csi/csi.sock
+        image: quay.io/k8scsi/csi-attacher:v2.2.0
+        imagePullPolicy: Always
+        name: csi-attacher
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /csi
+          name: socket-dir
+      serviceAccountName: csi-attacher
+      volumes:
+      - hostPath:
+          path: /var/lib/kubelet/plugins/csi-s3
+          type: DirectoryOrCreate
+        name: socket-dir

@@ -1,0 +1,5 @@
+apiVersion: v2
+appVersion: 0.1.0
+description: Dataset Lifecycle Framework chart
+name: dlf-chart
+version: 0.1.0
