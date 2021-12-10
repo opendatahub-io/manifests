@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+commonLabels:
+  app.kubernetes.io/component: cert-manager
+  app.kubernetes.io/name: cert-manager
+  kustomize.component: cert-manager
+kind: Kustomization
+#namespace: cert-manager
+resources:
+#This is downloaded from https://github.com/jetstack/cert-manager/releases/download/v1.5.0/cert-manager.yaml
+- cert-manager-1.5.yaml
+#moved this to main kustomize to give time for cert-manager to finish installing before creating it
+#- cluster-issuer.yaml
+
+# Patch upstream manifests to explicitly disable 'preserveUnknownFields',
+# otherwise upgrade with 'kubectl apply' fails.
+patches:
+- path: patches/crd-preserve-unknown-fields.yaml
+  target:
+    kind: CustomResourceDefinition
