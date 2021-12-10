@@ -1,0 +1,235 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: '9'
+    kubectl.kubernetes.io/last-applied-configuration: >
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"jupyter-web-app","kustomize.component":"jupyter-web-app"},"name":"jupyter-web-app-deployment","namespace":"kubeflow"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"jupyter-web-app","kustomize.component":"jupyter-web-app"}},"template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"false"},"labels":{"app":"jupyter-web-app","kustomize.component":"jupyter-web-app"}},"spec":{"containers":[{"env":[{"name":"APP_PREFIX","value":"/jupyter"},{"name":"UI","value":"default"},{"name":"USERID_HEADER","value":"kubeflow-userid"},{"name":"USERID_PREFIX","value":""}],"image":"public.ecr.aws/j1r0q0g6/notebooks/jupyter-web-app:v1.3.0-rc.0","name":"jupyter-web-app","ports":[{"containerPort":5000}],"volumeMounts":[{"mountPath":"/etc/config","name":"config-volume"}]}],"serviceAccountName":"jupyter-web-app-service-account","volumes":[{"configMap":{"name":"jupyter-web-app-config-568dbt5t88"},"name":"config-volume"}]}}}}
+  selfLink: /apis/apps/v1/namespaces/kubeflow/deployments/jupyter-web-app-deployment
+  resourceVersion: '381242'
+  name: jupyter-web-app-deployment
+  uid: e350f70d-1024-4e57-8e6b-42abccaa5237
+  creationTimestamp: '2021-04-13T20:29:56Z'
+  generation: 9
+  managedFields:
+    - manager: kfctl
+      operation: Update
+      apiVersion: apps/v1
+      time: '2021-04-13T20:29:56Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:metadata':
+          'f:annotations':
+            .: {}
+            'f:kubectl.kubernetes.io/last-applied-configuration': {}
+          'f:labels':
+            .: {}
+            'f:app': {}
+            'f:kustomize.component': {}
+        'f:spec':
+          'f:progressDeadlineSeconds': {}
+          'f:replicas': {}
+          'f:revisionHistoryLimit': {}
+          'f:selector':
+            'f:matchLabels':
+              .: {}
+              'f:app': {}
+              'f:kustomize.component': {}
+          'f:strategy':
+            'f:rollingUpdate':
+              .: {}
+              'f:maxSurge': {}
+              'f:maxUnavailable': {}
+            'f:type': {}
+          'f:template':
+            'f:metadata':
+              'f:annotations':
+                .: {}
+                'f:sidecar.istio.io/inject': {}
+              'f:labels':
+                .: {}
+                'f:app': {}
+                'f:kustomize.component': {}
+            'f:spec':
+              'f:volumes':
+                .: {}
+                'k:{"name":"config-volume"}':
+                  .: {}
+                  'f:configMap':
+                    .: {}
+                    'f:defaultMode': {}
+                    'f:name': {}
+                  'f:name': {}
+              'f:containers':
+                'k:{"name":"jupyter-web-app"}':
+                  'f:image': {}
+                  'f:volumeMounts':
+                    .: {}
+                    'k:{"mountPath":"/etc/config"}':
+                      .: {}
+                      'f:mountPath': {}
+                      'f:name': {}
+                  'f:terminationMessagePolicy': {}
+                  .: {}
+                  'f:resources': {}
+                  'f:env':
+                    .: {}
+                    'k:{"name":"APP_PREFIX"}':
+                      .: {}
+                      'f:name': {}
+                      'f:value': {}
+                    'k:{"name":"UI"}':
+                      .: {}
+                      'f:name': {}
+                      'f:value': {}
+                  'f:terminationMessagePath': {}
+                  'f:imagePullPolicy': {}
+                  'f:ports':
+                    .: {}
+                    'k:{"containerPort":5000,"protocol":"TCP"}':
+                      .: {}
+                      'f:containerPort': {}
+                      'f:protocol': {}
+                  'f:name': {}
+              'f:dnsPolicy': {}
+              'f:serviceAccount': {}
+              'f:restartPolicy': {}
+              'f:schedulerName': {}
+              'f:terminationGracePeriodSeconds': {}
+              'f:serviceAccountName': {}
+              'f:securityContext': {}
+    - manager: Mozilla
+      operation: Update
+      apiVersion: apps/v1
+      time: '2021-04-13T21:02:29Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:spec':
+          'f:template':
+            'f:spec':
+              'f:containers':
+                'k:{"name":"jupyter-web-app"}':
+                  'f:env':
+                    'k:{"name":"APP_DISABLE_AUTH"}':
+                      .: {}
+                      'f:name': {}
+                      'f:value': {}
+                    'k:{"name":"APP_SECURE_COOKIES"}':
+                      .: {}
+                      'f:name': {}
+                      'f:value': {}
+    - manager: kube-controller-manager
+      operation: Update
+      apiVersion: apps/v1
+      time: '2021-04-13T21:02:31Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:metadata':
+          'f:annotations':
+            'f:deployment.kubernetes.io/revision': {}
+        'f:status':
+          'f:availableReplicas': {}
+          'f:conditions':
+            .: {}
+            'k:{"type":"Available"}':
+              .: {}
+              'f:lastTransitionTime': {}
+              'f:lastUpdateTime': {}
+              'f:message': {}
+              'f:reason': {}
+              'f:status': {}
+              'f:type': {}
+            'k:{"type":"Progressing"}':
+              .: {}
+              'f:lastTransitionTime': {}
+              'f:lastUpdateTime': {}
+              'f:message': {}
+              'f:reason': {}
+              'f:status': {}
+              'f:type': {}
+          'f:observedGeneration': {}
+          'f:readyReplicas': {}
+          'f:replicas': {}
+          'f:updatedReplicas': {}
+  namespace: kubeflow
+  labels:
+    app: jupyter-web-app
+    kustomize.component: jupyter-web-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jupyter-web-app
+      kustomize.component: jupyter-web-app
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: jupyter-web-app
+        kustomize.component: jupyter-web-app
+      annotations:
+        sidecar.istio.io/inject: 'false'
+    spec:
+      restartPolicy: Always
+      serviceAccountName: jupyter-web-app-service-account
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      securityContext: {}
+      containers:
+        - resources: {}
+          terminationMessagePath: /dev/termination-log
+          name: jupyter-web-app
+          env:
+            - name: APP_PREFIX
+              value: /jupyter
+            - name: UI
+              value: default
+            - name: APP_DISABLE_AUTH
+              value: 'True'
+            - name: APP_SECURE_COOKIES
+              value: 'False'
+          ports:
+            - containerPort: 5000
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+          terminationMessagePolicy: File
+          image: 'public.ecr.aws/j1r0q0g6/notebooks/jupyter-web-app:v1.3.0-rc.0'
+      serviceAccount: jupyter-web-app-service-account
+      volumes:
+        - name: config-volume
+          configMap:
+            name: jupyter-web-app-config-568dbt5t88
+            defaultMode: 420
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+status:
+  observedGeneration: 9
+  replicas: 1
+  updatedReplicas: 1
+  readyReplicas: 1
+  availableReplicas: 1
+  conditions:
+    - type: Available
+      status: 'True'
+      lastUpdateTime: '2021-04-13T20:29:59Z'
+      lastTransitionTime: '2021-04-13T20:29:59Z'
+      reason: MinimumReplicasAvailable
+      message: Deployment has minimum availability.
+    - type: Progressing
+      status: 'True'
+      lastUpdateTime: '2021-04-13T21:02:31Z'
+      lastTransitionTime: '2021-04-13T20:29:56Z'
+      reason: NewReplicaSetAvailable
+      message: >-
+        ReplicaSet "jupyter-web-app-deployment-55bd85b875" has successfully
+        progressed.
+
