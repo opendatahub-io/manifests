@@ -4,3 +4,8 @@ namespace: kubeflow
 resources:
 - ../../../../apps/training-operator/upstream/overlays/kubeflow
 
+patchesStrategicMerge:
+- ./configs/addfinalizer-edit.yaml
+- ./configs/addfinalizer-view.yaml
+- ./configs/addfinalizer-training.yaml
+
