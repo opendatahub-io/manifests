@@ -3,4 +3,5 @@ kind: Kustomization
 resources:
 - ../../../../common/knative/knative-serving/base
 - ../../../../common/knative/knative-eventing/base
+- network-attachment.yaml
 - ../../../../common/istio-1-9/cluster-local-gateway/base
