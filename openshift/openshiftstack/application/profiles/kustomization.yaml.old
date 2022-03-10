@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kubeflow
+resources:
+- ../../../../profiles/base_v3
+
+configMapGenerator:
+- name: kubeflow-config
+  envs:
+  - ../../config/params.env
+# We need to define vars at the top level otherwise we will get
+# conflicts.
+vars:
+- fieldref:
+    fieldPath: data.clusterDomain
+  name: clusterDomain
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: kubeflow-config
+- fieldref:
+    fieldPath: metadata.namespace
+  name: namespace
+  objref:
+    apiVersion: networking.istio.io/v1alpha3
+    kind: VirtualService
+    name: kfam
+#This image we created to disable sidecar injection, we need to fix it to enable istio sidecar containers with fsgrp 1377
+images:
+#- name: gcr.io/kubeflow-images-public/profile-controller
+- name: public.ecr.aws/j1r0q0g6/notebooks/profile-controller
+  newName: quay.io/kubeflow/profile-controller
+#  newTag: v0.7.0
+  newTag: v0.8.0

@@ -1,0 +1,83 @@
+apiVersion: kfdef.apps.kubeflow.org/v1
+kind: KfDef
+metadata:
+  name: kubeflow
+  namespace: kubeflow
+spec:
+  applications:
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/openshift/openshift-scc
+    name: openshift-scc
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/istio-1-1-1-Openshift
+    name: istio
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/cert-manager-1.5
+    name: cert-manager
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/kfp-tekton
+    name: kfp-tekton
+#Uncomment if you need KFP on Argo
+#Make sure to comment kfp-tekton
+#  - kustomizeConfig:
+#      repoRef:
+#        name: manifests
+#        path: openshift/openshiftstack/application/pipeline-agnostic
+#    name: pipeline
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/knative
+    name: knative
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/jupyter-web-app
+    name: jupyter-web-app
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/notebook-controller
+    name: notebook-controller
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/volumes-web-app
+    name: volumes-web-app
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/training-operator
+    name: training-operator
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/katib
+    name: katib
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/mpi-job
+    name: mpi-job
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack/application/kfserving
+    name: kfserving
+  - kustomizeConfig:
+      repoRef:
+        name: manifests
+        path: openshift/openshiftstack
+    name: kubeflow-apps
+  repos:
+  - name: manifests
+    uri: https://github.com/opendatahub-io/manifests/archive/v1.4.0-rc.2-openshift.tar.gz
+  version: v1.4.0-rc.2
