@@ -65,11 +65,6 @@ spec:
   - kustomizeConfig:
       repoRef:
         name: manifests
-        path: openshift/openshiftstack/application/mpi-job
-    name: mpi-job
-  - kustomizeConfig:
-      repoRef:
-        name: manifests
         path: openshift/openshiftstack/application/kfserving
     name: kfserving
   - kustomizeConfig:
@@ -79,5 +74,5 @@ spec:
     name: kubeflow-apps
   repos:
   - name: manifests
-    uri: https://github.com/lavlas/manifests/archive/v1.5-branch-openshift.tar.gz
+    uri: https://github.com/lavlas/manifests/archive/feature/kf-v1.5.tar.gz
   version: v1.5.0
