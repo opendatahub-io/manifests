@@ -34,6 +34,10 @@ users:
 - system:serviceaccount:knative-eventing:imc-controller
 - system:serviceaccount:knative-eventing:imc-dispatcher
 - system:serviceaccount:knative-serving:controller
+- system:serviceaccount:kubeflow:kfp-csi-s3
+- system:serviceaccount:$(NAMESPACE):csi-attacher
+- system:serviceaccount:$(NAMESPACE):csi-provisioner
+- system:serviceaccount:$(NAMESPACE):pipeline-runner
 volumes:
 - configMap
 - downwardAPI

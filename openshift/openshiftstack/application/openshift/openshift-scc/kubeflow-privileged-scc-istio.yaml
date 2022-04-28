@@ -34,6 +34,12 @@ users:
 - system:serviceaccount:istio-system:istio-pilot-service-account
 - system:serviceaccount:istio-system:istio-mixer-service-account
 - system:serviceaccount:istio-system:istiod-service-account
+- system:serviceaccount:kubeflow:kfp-csi-s3
+# Allowing all serviceaccounts in kubeflow to run any uid per istio 1.9 documentation for openshift https://istio.io/latest/docs/setup/platform-setup/openshift/
+- system:serviceaccount:kubeflow:csi-attacher
+# Allowing all serviceaccounts in kubeflow to run any uid per istio 1.9 documentation for openshift https://istio.io/latest/docs/setup/platform-setup/openshift/
+- system:serviceaccount:kubeflow:csi-provisioner
+- system:serviceaccount:kubeflow:pipeline-runner
 volumes:
 - configMap
 - downwardAPI

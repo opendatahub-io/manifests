@@ -40,6 +40,10 @@ users:
 - system:serviceaccount:$(NAMESPACE):kfserving
 # for admission-webhook
 - system:serviceaccount:$(NAMESPACE):admission-webhook-service-account
+- system:serviceaccount:$(NAMESPACE):kfp-csi-s3
+- system:serviceaccount:$(NAMESPACE):csi-attacher
+- system:serviceaccount:$(NAMESPACE):csi-provisioner
+- system:serviceaccount:$(NAMESPACE):pipeline-runner
 # Allowing all serviceaccounts in kubeflow to run any uid per istio 1.9 documentation for openshift https://istio.io/latest/docs/setup/platform-setup/openshift/
 - system:serviceaccounts:$(NAMESPACE)
 volumes:
