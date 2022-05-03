@@ -1,0 +1,16 @@
+
+# Source: dlf-chart/charts/csi-s3-chart/templates/provisioner.yaml
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: csi-provisioner-s3
+  namespace: kubeflow
+spec:
+  template:
+    spec:
+      volumes:
+        - hostPath:
+            path: /var/lib/kubelet/plugins/kfp-csi-s3
+            type: DirectoryOrCreate
+          name: socket-dir
+---

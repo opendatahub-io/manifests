@@ -6,3 +6,6 @@ resources:
 
 patchesStrategicMerge:
 - removesidemenu.yaml
+- daemonset.yaml
+- statefulset_attacher.yaml
+- statefulset_provisioner.yaml
