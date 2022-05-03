@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+# Install models web app:
+- ../../../../contrib/kserve/models-web-app/overlays/kubeflow
+# Install Kserve controller
+- kserve_kubeflow.yaml
