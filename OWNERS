@@ -1,12 +1,10 @@
 approvers:
-  - elikatsis
-  - kimwnasptd
-  - PatrickXYS
-  - StefanoFioravanzo
-  - yanniszark
+- crobby
+- lavlas
+- samuelvl
+- VaishnaviHire
 reviewers:
-  - elikatsis
-  - kimwnasptd
-  - PatrickXYS
-  - StefanoFioravanzo
-  - yanniszark
+- crobby
+- lavlas
+- samuelvl
+- VaishnaviHire
