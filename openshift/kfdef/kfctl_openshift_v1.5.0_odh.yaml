@@ -80,5 +80,5 @@ spec:
     name: kubeflow-apps
   repos:
   - name: manifests
-    uri: https://github.com/opendatahub-io/manifests/archive/feature/v1.5-branch-openshift.tar.gz
+    uri: https://github.com/opendatahub-io/manifests/archive/v1.5-branch-openshift.tar.gz
   version: v1.5.0
