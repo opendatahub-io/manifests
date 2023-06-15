@@ -16,7 +16,7 @@ webhooks:
   name: $(podDefaultsDeploymentName).kubeflow.org
   namespaceSelector:
     matchLabels:
-      app.kubernetes.io/part-of: kubeflow-profile
+       opendatahub.io/dashboard: "true"
   rules:
   - apiGroups:
     - ""

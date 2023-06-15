@@ -9,6 +9,7 @@ bases:
 
 resources:
 - certificate.yaml
+- namespace.yaml
 
 namespace: kubeflow
 
