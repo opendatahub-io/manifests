@@ -21703,7 +21703,7 @@ spec:
               fieldPath: metadata.namespace
         - name: SECRET_NAME
           value: kserve-webhook-server-cert
-        image: kserve/kserve-controller:v0.13.0
+        image: quay.io/rmartine/kserve-controller:v0.13.0
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 5

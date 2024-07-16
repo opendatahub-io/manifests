@@ -643,15 +643,7 @@ data:
             {{- end }}
                 drop:
                 - ALL
-            {{- if not (or .Values.pilot.cni.enabled .Values.istio_cni.enabled) }}
-              readOnlyRootFilesystem: false
-              runAsGroup: 0
-              runAsNonRoot: false
-              runAsUser: 0
-            {{- else }}
               readOnlyRootFilesystem: true
-              runAsGroup: {{ .ProxyGID | default "1337" }}
-              runAsUser: {{ .ProxyUID | default "1337" }}
               runAsNonRoot: true
             {{- end }}
           {{ end -}}
@@ -669,30 +661,13 @@ data:
           {{- end }}
             {{with .Values.global.imagePullPolicy }}imagePullPolicy: "{{.}}"{{end}}
             resources:
-          {{ template "resources" . }}
-            securityContext:
-              allowPrivilegeEscalation: true
-              capabilities:
-                add:
-                - SYS_ADMIN
-                drop:
-                - ALL
-              privileged: true
-              readOnlyRootFilesystem: false
-              runAsGroup: 0
-              runAsNonRoot: false
-              runAsUser: 0
-          {{ end }}
-          {{ if not $nativeSidecar }}
           containers:
-          {{ end }}
           - name: istio-proxy
           {{- if contains "/" (annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy.image) }}
             image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy.image }}"
           {{- else }}
             image: "{{ .ProxyImage }}"
           {{- end }}
-            {{ if $nativeSidecar }}restartPolicy: Always{{end}}
             ports:
             - containerPort: 15090
               protocol: TCP
@@ -1872,13 +1847,6 @@ data:
                   periodSeconds: 15
                   successThreshold: 1
                   timeoutSeconds: 1
-                securityContext:
-                  privileged: false
-                  runAsGroup: 1337
-                  runAsUser: 0
-                  capabilities:
-                    drop:
-                    - ALL
                 volumeMounts:
                 - name: workload-socket
                   mountPath: /var/run/secrets/workload-spiffe-uds
@@ -2056,30 +2024,6 @@ data:
                   {{- toYaml .Values.global.proxy.resources | nindent 10 }}
                 {{- end }}
                 {{with .Values.global.imagePullPolicy }}imagePullPolicy: "{{.}}"{{end}}
-                securityContext:
-                {{- if ge .KubeVersion 122 }}
-                  # Safe since 1.22: https://github.com/kubernetes/kubernetes/pull/103326
-                  capabilities:
-                    drop:
-                    - ALL
-                  allowPrivilegeEscalation: false
-                  privileged: false
-                  readOnlyRootFilesystem: true
-                  runAsUser: {{ .ProxyUID | default "1337" }}
-                  runAsGroup: {{ .ProxyGID | default "1337" }}
-                  runAsNonRoot: true
-                {{- else }}
-                  capabilities:
-                    drop:
-                    - ALL
-                    add:
-                    - NET_BIND_SERVICE
-                  runAsUser: 0
-                  runAsGroup: 1337
-                  runAsNonRoot: false
-                  allowPrivilegeEscalation: true
-                  readOnlyRootFilesystem: true
-                {{- end }}
                 ports:
                 - containerPort: 15021
                   name: status-port
@@ -2599,6 +2543,134 @@ webhooks:
     - pods
   sideEffects: None
 ---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: istio-cni-node
+  namespace: kube-system
+  labels:
+    k8s-app: istio-cni-node
+    release: istio
+    istio.io/rev: default
+    install.operator.istio.io/owning-resource: unknown
+    operator.istio.io/component: Cni
+spec:
+  selector:
+    matchLabels:
+      k8s-app: istio-cni-node
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: istio-cni-node
+        sidecar.istio.io/inject: 'false'
+      annotations:
+        sidecar.istio.io/inject: 'false'
+        ambient.istio.io/redirection: disabled
+        # Add Prometheus Scrape annotations
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '15014'
+        prometheus.io/path: /metrics
+        # Custom annotations
+    spec:
+      nodeSelector:
+        kubernetes.io/os: linux
+      # Can be configured to allow for excluding instio-cni from being scheduled on specified nodes
+      tolerations:
+        # Make sure istio-cni-node gets scheduled on all nodes.
+      - effect: NoSchedule
+        operator: Exists
+        # Mark the pod as a critical add-on for rescheduling.
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+      priorityClassName: system-node-critical
+      serviceAccountName: istio-cni
+      # Minimize downtime during a rolling upgrade or deletion; tell Kubernetes to do a "force
+      # deletion": https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods.
+      terminationGracePeriodSeconds: 5
+      containers:
+        # This container installs the Istio CNI binaries
+        # and CNI network config file on each node.
+      - name: install-cni
+        image: docker.io/istio/install-cni:1.18.7
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8000
+        command: [install-cni]
+        args:
+        - --log_output_level=default:info
+        env:
+            # The CNI network config to install on each node.
+        - name: CNI_NETWORK_CONFIG
+          valueFrom:
+            configMapKeyRef:
+              name: istio-cni-config
+              key: cni_network_config
+        - name: CNI_NET_DIR
+          value: /etc/cni/net.d
+            # Deploy as a standalone CNI plugin or as chained?
+        - name: CHAINED_CNI_PLUGIN
+          value: 'true'
+        - name: REPAIR_ENABLED
+          value: 'true'
+        - name: REPAIR_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: REPAIR_LABEL_PODS
+          value: 'false'
+            # Set to true to enable pod deletion
+        - name: REPAIR_DELETE_PODS
+          value: 'true'
+        - name: REPAIR_RUN_AS_DAEMON
+          value: 'true'
+        - name: REPAIR_SIDECAR_ANNOTATION
+          value: sidecar.istio.io/status
+        - name: REPAIR_INIT_CONTAINER_NAME
+          value: istio-validation
+        - name: REPAIR_BROKEN_POD_LABEL_KEY
+          value: cni.istio.io/uninitialized
+        - name: REPAIR_BROKEN_POD_LABEL_VALUE
+          value: 'true'
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: LOG_LEVEL
+          value: debug
+        volumeMounts:
+        - mountPath: /host/opt/cni/bin
+          name: cni-bin-dir
+        - mountPath: /host/etc/cni/net.d
+          name: cni-net-dir
+        - mountPath: /var/run/istio-cni
+          name: cni-log-dir
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+      volumes:
+        # Used to install CNI.
+      - name: cni-bin-dir
+        hostPath:
+          path: /opt/cni/bin
+      - name: cni-net-dir
+        hostPath:
+          path: /etc/cni/net.d
+        # Used for UDS log
+      - name: cni-log-dir
+        hostPath:
+          path: /var/run/istio-cni
+      - name: cni-netns-dir
+        hostPath:
+          path: /var/run/netns
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -2771,10 +2843,6 @@ spec:
         - mountPath: /etc/istio/ingressgateway-ca-certs
           name: ingressgateway-ca-certs
           readOnly: true
-      securityContext:
-        runAsGroup: 1337
-        runAsNonRoot: true
-        runAsUser: 1337
       serviceAccountName: istio-ingressgateway-service-account
       volumes:
       - emptyDir: {}
@@ -2921,13 +2989,6 @@ spec:
           requests:
             cpu: 500m
             memory: 2048Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
         volumeMounts:
         - mountPath: /var/run/secrets/tokens
           name: istio-token

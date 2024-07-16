@@ -12,7 +12,7 @@ commonLabels:
 
 images:
 - name: kserve/models-web-app
-  newName: kserve/models-web-app
+  newName: quay.io/rmartine/models-web-app
   newTag: v0.13.0-rc.0
 configMapGenerator:
   - name: kserve-models-web-app-config

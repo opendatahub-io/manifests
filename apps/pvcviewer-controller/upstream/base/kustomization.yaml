@@ -5,5 +5,5 @@ resources:
 
 images:
 - name: docker.io/kubeflownotebookswg/pvcviewer-controller
-  newName: docker.io/kubeflownotebookswg/pvcviewer-controller
+  newName: quay.io/rmartine/pvcviewer-controller
   newTag: v1.9.0-rc.1
